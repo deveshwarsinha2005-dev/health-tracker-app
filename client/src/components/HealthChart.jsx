@@ -20,27 +20,52 @@ export default function HealthChart() {
 
     try {
 
-      const userEmail = localStorage.getItem("userEmail");
+      // GET LOGGED IN USER
+      const loggedInUser = JSON.parse(
+        localStorage.getItem("loggedInUser")
+      );
 
-      // GET USER-SPECIFIC DATA
+      const userEmail = loggedInUser?.email;
+
+      // VALIDATION
+      if (!userEmail) {
+
+        console.log("No user email found");
+
+        return;
+
+      }
+
+      console.log("FETCHING DATA FOR:", userEmail);
+
+      // FETCH USER DATA
       const res = await API.get(
         `/health/all/${userEmail}`
       );
 
+      console.log("BACKEND DATA:", res.data);
+
       // FORMAT DATA
-      const formattedData = res.data.map((item, index) => ({
+      const formattedData = res.data.map(
+        (item, index) => ({
 
-        name: `Entry ${index + 1}`,
+          name: `Entry ${index + 1}`,
 
-        calories: item.calories,
+          calories: Number(item.calories) || 0,
 
-      }));
+        })
+      );
+
+      console.log("FORMATTED:", formattedData);
 
       setChartData(formattedData);
 
     } catch (error) {
 
-      console.log("Chart Error:", error);
+      console.log(
+        "Chart Error:",
+        error.response?.data || error.message
+      );
 
     }
 
@@ -51,7 +76,7 @@ export default function HealthChart() {
 
     fetchChartData();
 
-    // AUTO REFRESH EVERY 2 SECONDS
+    // AUTO REFRESH
     const interval = setInterval(() => {
 
       fetchChartData();
@@ -67,7 +92,9 @@ export default function HealthChart() {
     <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl mb-10">
 
       <h2 className="text-3xl font-bold mb-8 text-white">
+
         Calories Analytics 📈
+
       </h2>
 
       <ResponsiveContainer width="100%" height={350}>
